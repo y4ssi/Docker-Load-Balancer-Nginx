@@ -10,12 +10,12 @@ from subprocess import call
 
 # delete old upstream
 try:
-    os.remove("/etc/nginx/upstream.conf.new")
+    os.remove("/etc/nginx/conf.d/upstream.conf.new")
 except:
     print "nothing to erase"
 
 # append new upstream
-with open("/etc/nginx/upstream.conf.new", "a") as upstream_new:
+with open("/etc/nginx/conf.d/upstream.conf.new", "a") as upstream_new:
     upstream_new.write("upstream lb {\n")
     # connect to API Docker
     session = requests_unixsocket.Session()
@@ -28,6 +28,6 @@ with open("/etc/nginx/upstream.conf.new", "a") as upstream_new:
             upstream_new.write("    server " + value["IPv4Address"].split("/")[0] + ":" + str(os.environ["PORT_SERVICE"]) + " max_fails=1 fail_timeout=1s;\n")
     upstream_new.write("}")
 # Set upstream
-if not filecmp.cmp("/etc/nginx/upstream.conf.new", "/etc/nginx/upstream.conf"):
-    copyfile("/etc/nginx/upstream.conf.new", "/etc/nginx/upstream.conf")
-    call(["nginx"])
+if not filecmp.cmp("/etc/nginx/conf.d/upstream.conf.new", "/etc/nginx/conf.d/upstream.conf"):
+    copyfile("/etc/nginx/conf.d/upstream.conf.new", "/etc/nginx/conf.d/upstream.conf")
+    call(["nginx", "-s", "reload"])
