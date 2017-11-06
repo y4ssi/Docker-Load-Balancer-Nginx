@@ -5,13 +5,12 @@ RUN echo "deb http://deb.debian.org/debian/ buster main contrib non-free" > /etc
         && apt-get install -y python-pip python-setuptools --no-install-recommends --no-install-suggests \
         && pip install requests_unixsocket
 
-EXPOSE 80/tcp
-
 COPY config/scripts /scripts/
 
-COPY config/proxy/default /etc/nginx/conf.d/default.conf
+COPY config/proxy/stream.conf /etc/nginx/stream.conf
 
-RUN rm -rf /var/lib/apt/lists/* \
+RUN echo "include /etc/nginx/stream.conf;" >> /etc/nginx/nginx.conf \
+        && rm -rf /var/lib/apt/lists/* \
 # if we have leftovers from building, let's purge them (including extra, unnecessary build deps)
 	&& if [ -n "$tempDir" ]; then \
 		apt-get purge -y --auto-remove \
