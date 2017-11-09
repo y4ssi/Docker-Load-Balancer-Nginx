@@ -3,7 +3,7 @@ FROM nginx
 RUN echo "deb http://deb.debian.org/debian/ buster main contrib non-free" > /etc/apt/sources.list \
         && apt-get update \
         && apt-get install -y python-pip python-setuptools --no-install-recommends --no-install-suggests \
-        && pip install requests_unixsocket
+        && pip install requests_unixsocket docker
 
 COPY config/scripts /scripts/
 
