@@ -13,7 +13,10 @@ import threading
 # connect to API Docker
 session = requests_unixsocket.Session()
 # Get network ID
-networkID = session.get("http+unix://%2Fvar%2Frun%2Fdocker.sock/containers/" +  str(os.environ["HOSTNAME"])  + "/json").json()["NetworkSettings"]["Networks"].values()[0]["NetworkID"]
+Networks = session.get("http+unix://%2Fvar%2Frun%2Fdocker.sock/containers/" +  str(os.environ["HOSTNAME"])  + "/json").json()["NetworkSettings"]["Networks"].values()[0]
+networkID = Networks["NetworkID"]
+name_service = Networks["Links"][0].split(":")[1]
+aliases = Networks["Aliases"][0]
 
 def containers_in_network(session):
     # Get containers in network
@@ -31,7 +34,7 @@ def upstream():
         upstream_new.write("upstream lb {\n")
         upstream_new.write("    ip_hash;\n")
         for key, value in containers_in_network(session).iteritems():
-            if "_lb_" not in value["Name"]:
+            if aliases not in value["Name"] and name_service in value["Name"]:
                 upstream_new.write("    server " + value["IPv4Address"].split("/")[0] + ":" + str(os.environ["PORT_SERVICE"]) + " max_fails=1 fail_timeout=1s;\n")
         upstream_new.write("}")
     # Set upstream
@@ -49,7 +52,7 @@ def stream():
     with open("/etc/nginx/stream.conf.new", "a") as stream_new:
         stream_new.write("upstream lb {\n")
         for key, value in containers_in_network(session).iteritems():
-            if "_lb_" not in value["Name"]:
+            if aliases not in value["Name"] and name_service in value["Name"]:
                 stream_new.write("    server " + value["IPv4Address"].split("/")[0] + ":" + str(os.environ["PORT_SERVICE"]) + " max_fails=1 fail_timeout=1s;\n")
         stream_new.write("}")
     # Set stream
